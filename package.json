@@ -1,5 +1,5 @@
 {
-  "name": "flagger",
+  "name": "features-flagger",
   "author": "grano22",
   "description": "Flagger is a library designed for check and manage feature flags in js ecosystem",
   "license": "Apache-2.0",
