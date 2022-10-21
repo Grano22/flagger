@@ -1,7 +1,25 @@
 {
   "name": "flagger",
+  "author": "grano22",
+  "description": "Flagger is a library designed for check and manage feature flags in js ecosystem",
+  "license": "Apache-2.0",
+  "repository": "Grano22/flagger",
   "version": "0.0.1",
   "type": "module",
+  "keywords": [
+    "feature",
+    "flags",
+    "feature_flags"
+  ],
+  "files": ["src", "dist"],
+  "main": "./src/FlaggerFeaturesManager.ts",
+  "module": "./src/FlaggerFeaturesManager.ts",
+  "exports": {
+    ".": {
+      "import": "./src/FlaggerFeaturesManager.ts",
+      "require": "./src/FlaggerFeaturesManager.ts"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
