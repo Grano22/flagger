@@ -15,6 +15,7 @@ import FeaturesIsNotYetLoaded from "./exception/FeaturesIsNotYetLoaded";
 import FlaggerOnlineConstraint from "./constraint/FlaggerOnlineConstraint";
 import FlaggerDateIntervalConstraint from "./constraint/FlaggerDateIntervalConstraint";
 import FlaggerConstraintInterface from "./constraint/FlaggerConstraintInterface";
+import UnhandledFlaggerException from "./exception/UnhandledFlaggerException";
 
 export default class FlaggerFeaturesManager {
     #featureRegistry: FlaggerFeatureRegistry;
@@ -33,9 +34,10 @@ export default class FlaggerFeaturesManager {
             this.loadConfig(config);
         } catch(error) {
             if (error instanceof ZodError) {
-                console.error(error.message);
-                throw new FailedToValidateConfiguration();
+                throw FailedToValidateConfiguration.fromZodError(error);
             }
+
+            throw new UnhandledFlaggerException(error);
         }
     }
 
@@ -90,11 +92,10 @@ export default class FlaggerFeaturesManager {
             this.#configLoader.markConfigPartAsLoaded('features');
         } catch(error) {
             if (error instanceof ZodError) {
-                console.error(error.message);
-                throw new FailedToValidateConfiguration();
+                throw FailedToValidateConfiguration.fromZodError(error);
             }
 
-            throw error;
+            throw new UnhandledFlaggerException(error);
         }
     }
 

@@ -3,6 +3,7 @@ import FlaggerConstraintInterface from "./FlaggerConstraintInterface";
 import {z} from "zod";
 import FlaggerConstraint from "./FlaggerConstraint";
 import FlaggerSerializableConstraint from "./FlaggerSerializableConstraint";
+import InvalidDateFormatInString from "../external/deserializers/exception/InvalidDateFormatInString";
 
 const FlaggerDateIntervalConstraintConfig = z.object({
     startDate: z.date(),
@@ -29,9 +30,19 @@ export default class FlaggerDateIntervalConstraint
     }
 
     static deserialize(...args: any[]): FlaggerDateIntervalConstraint {
+        let startDate = Date.parse(args[0]), endDate = Date.parse(args[1]);
+
+        if (isNaN(startDate)) {
+            throw new InvalidDateFormatInString(args[0]);
+        }
+
+        if (isNaN(endDate)) {
+            throw new InvalidDateFormatInString(args[1]);
+        }
+
         return new this({
-            startDate: args[0],
-            endDate: args[1]
+            startDate: new Date(startDate),
+            endDate: new Date(endDate)
         });
     }
 

@@ -1,5 +1,4 @@
 import {z} from "zod";
-import FlaggerFeatureDeclaration from "../FlaggerFeatureDeclaration";
 import FlaggerExternalFeatureDeclaration from "./FlaggerExternalFeatureDeclaration";
 
 const FlaggerExternalConfig = z.object({
