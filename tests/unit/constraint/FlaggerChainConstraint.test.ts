@@ -1,6 +1,6 @@
 import FlaggerChainConstraint from "../../../src/constraint/FlaggerChainConstraint";
 import FlaggerOnlineConstraint from "../../../src/constraint/FlaggerOnlineConstraint";
-import FlaggerDateIntervalConstraint from "../../../src/constraint/FlaggerDateIntervalActivator";
+import FlaggerDateIntervalConstraint from "../../../src/constraint/FlaggerDateIntervalConstraint";
 
 describe('Test flagger constraints with chain', () => {
     it('Check complex chain will be true', async () => {

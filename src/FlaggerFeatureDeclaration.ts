@@ -13,4 +13,6 @@ const FlaggerFeatureDeclaration = z.object({
     constraint: z.instanceof(FlaggerConstraint).optional()
 });
 
+export type FlaggerFeatureDeclarationType = z.infer<typeof FlaggerFeatureDeclaration>;
+
 export default FlaggerFeatureDeclaration;

@@ -1,0 +1,10 @@
+{
+   "features": [
+       {
+          "name": "SomeFeature",
+          "version": "0.0.1",
+          "description": "Some existing feature",
+          "constraint": "betweenDate('2022-09-01', '2022-10-14') and isOnline"
+       }
+   ]
+}

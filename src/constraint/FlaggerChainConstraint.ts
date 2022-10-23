@@ -1,7 +1,7 @@
 import FlaggerConstraint from "./FlaggerConstraint";
 import FlaggerConstraintInterface from "./FlaggerConstraintInterface";
 
-enum ChainLogicOperator {
+export enum ChainLogicOperator {
     AND = 'AND',
     OR = 'OR'
 }
