@@ -1,6 +1,6 @@
 import {z} from 'zod';
-import FlaggerActivator from "./activator/FlaggerActivator";
-import FlaggerConstraint from "./constraint/FlaggerConstraint";
+import FlaggerActivator from "../activator/FlaggerActivator";
+import FlaggerConstraint from "../constraint/FlaggerConstraint";
 
 const FlaggerFeatureDeclaration = z.object({
     name: z.string().min(4).max(25),

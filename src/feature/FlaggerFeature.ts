@@ -1,4 +1,4 @@
-import FlaggerFeatureStatus from "./FlaggerFeatureStatus";
+import FlaggerFeatureStatus from "../FlaggerFeatureStatus";
 import FlaggerFeatureDetails from "./FlaggerFeatureDetails";
 
 export default class FlaggerFeature {

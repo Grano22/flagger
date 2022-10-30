@@ -1,35 +1,44 @@
-import FlaggerConfig, {FlaggerManagerConfig} from "./config/FlaggerConfig";
-import FlaggerFeatureRegistry from "./registry/FlaggerRegistry";
-import FlaggerFeature from "./FlaggerFeature";
-import FlaggerFeatureDeclaration from "./FlaggerFeatureDeclaration";
+import {FlaggerManagerConfig} from "./config/FlaggerConfig";
+import FlaggerFeatureRegistry from "./registry/FlaggerFeatureRegistry";
+import FlaggerFeature from "./feature/FlaggerFeature";
+import FlaggerFeatureDeclaration from "./feature/FlaggerFeatureDeclaration";
 import {z, ZodError} from "zod";
 import FlaggerFeatureStatus from "./FlaggerFeatureStatus";
 import FailedToValidateConfiguration from "./exception/FailedToValidateConfiguration";
-import FlaggerFeatureDetails from "./FlaggerFeatureDetails";
-import FlaggerConstraint from "./constraint/FlaggerConstraint";
-import FlaggerExternalConfig, {FlaggerExternalManagerConfig} from "./external/FlaggerExternalConfig";
+import FlaggerFeatureDetails from "./feature/FlaggerFeatureDetails";
+import {FlaggerExternalManagerConfig} from "./external/FlaggerExternalConfig";
 import FlaggerExternalConfigDeserializer from "./external/FlaggerExternalConfigDeserializer";
 import ConfigurationIsNotYetLoaded from "./exception/ConfigurationIsNotYetLoaded";
 import FlaggerConfigLoader from "./config/FlaggerConfigLoader";
 import FeaturesIsNotYetLoaded from "./exception/FeaturesIsNotYetLoaded";
 import FlaggerOnlineConstraint from "./constraint/FlaggerOnlineConstraint";
-import FlaggerDateIntervalConstraint from "./constraint/FlaggerDateIntervalConstraint";
-import FlaggerConstraintInterface from "./constraint/FlaggerConstraintInterface";
 import UnhandledFlaggerException from "./exception/UnhandledFlaggerException";
+import FlaggerAddon from "./modules/FlaggerAddon";
+import FlaggerServiceLocator from "./services/FlaggerServiceLocator";
+import InMemoryFlaggerFeatureRepository from "./repository/InMemoryFlaggerFeatureRepository";
+import FlaggerAddonRegistry from "./registry/FlaggerAddonRegistry";
+import DeclaredConstraintDeserializersRegistry from "./registry/DeclaredConstraintDeserializersRegistry";
+import FlaggerConstraintGenericDeserializer from "./constraint/deserializer/FlaggerConstraintGenericDeserializer";
+import FlaggerConstraintDeserializer from "./constraint/deserializer/FlaggerConstraintDeserializer";
+import FlaggerDateIntervalConstraintDeserializer
+    from "./constraint/deserializer/FlaggerDateIntervalConstraintDeserializer";
 
 export default class FlaggerFeaturesManager {
-    #featureRegistry: FlaggerFeatureRegistry;
-    #configLoader: FlaggerConfigLoader;
-    #supportedConstraints: Array<new (...args: any[]) => FlaggerConstraintInterface> = [];
+    readonly #featureRegistry: FlaggerFeatureRegistry;
+    readonly #configLoader: FlaggerConfigLoader;
+    readonly #serviceLocator: FlaggerServiceLocator;
+    readonly #addons: FlaggerAddonRegistry;
+    readonly #registeredConstraintDeserializers: DeclaredConstraintDeserializersRegistry;
 
     public static createWithInternalConfig(config: FlaggerManagerConfig) {
         return new this(config);
     }
 
-    public loadExternalConfig(externalConfig: FlaggerExternalManagerConfig) {
+    public async loadExternalConfig(externalConfig: FlaggerExternalManagerConfig) {
         try {
-            const deserializer = new FlaggerExternalConfigDeserializer();
-            const config = deserializer.deserialize(externalConfig);
+            const deserializer =
+                new FlaggerExternalConfigDeserializer(this.#registeredConstraintDeserializers.getAll());
+            const config = await deserializer.deserialize(externalConfig);
 
             this.loadConfig(config);
         } catch(error) {
@@ -44,14 +53,17 @@ export default class FlaggerFeaturesManager {
     constructor(config: FlaggerManagerConfig | null = null) {
         this.#featureRegistry = new FlaggerFeatureRegistry();
         this.#configLoader = new FlaggerConfigLoader();
-        this.#supportedConstraints = [
-            FlaggerOnlineConstraint,
-            FlaggerDateIntervalConstraint
-        ];
+        this.#serviceLocator = new FlaggerServiceLocator();
+        this.#addons = new FlaggerAddonRegistry();
+
+        this.#serviceLocator.register(new InMemoryFlaggerFeatureRepository(this.#featureRegistry));
 
         if (config !== null) {
             this.loadConfig(config);
         }
+
+        this.#registeredConstraintDeserializers =
+            new DeclaredConstraintDeserializersRegistry(this.#prepareConstraintDeserializers());
     }
 
     public loadConfig(config: FlaggerManagerConfig) {
@@ -79,7 +91,7 @@ export default class FlaggerFeaturesManager {
                 if (!!declaredFeature.default) {
                     feature.activate();
                 } else {
-                    if (declaredFeature.constraint instanceof FlaggerConstraint) {
+                    if (declaredFeature.constraint) {
                         if (await declaredFeature.constraint.checkIfShouldBeActivated()) {
                             feature.activate();
                         }
@@ -111,6 +123,11 @@ export default class FlaggerFeaturesManager {
         return Array.from(this.#featureRegistry);
     }
 
+    public useAddon(addon: FlaggerAddon) {
+        this.#addons.register(addon);
+        addon.onLoad(this.#serviceLocator);
+    }
+
     #indicateIfManagerIsNotReady() {
         if (!this.#configLoader.isConfigMapReady) {
             throw new ConfigurationIsNotYetLoaded();
@@ -119,6 +136,19 @@ export default class FlaggerFeaturesManager {
         if (!this.#configLoader.isConfigPartLoaded('features')) {
             throw new FeaturesIsNotYetLoaded();
         }
+    }
+
+    #prepareConstraintDeserializers() {
+        const builtIn: FlaggerConstraintDeserializer[] = [
+            new FlaggerConstraintGenericDeserializer('isOnline', FlaggerOnlineConstraint),
+            new FlaggerDateIntervalConstraintDeserializer()
+        ];
+
+        for (const constraintDeserializer of this.#configLoader.map?.constraintDeserializers ?? []) {
+            builtIn.push(constraintDeserializer);
+        }
+
+        return builtIn;
     }
 
     #registerActivators() {

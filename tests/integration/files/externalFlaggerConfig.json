@@ -1,0 +1,32 @@
+{
+    "features": [
+      {
+        "name": "TestFeature1",
+        "description": "Test feature 1",
+        "version": "1.0",
+        "default": true
+      },
+      {
+        "name": "TestFeature2",
+        "description": "Test feature 2",
+        "version": "1.1",
+        "hidden": false,
+        "constraint": "isOnline"
+      },
+      {
+        "name": "TestFeature3",
+        "description": "Test feature 3",
+        "version": "0.4",
+        "hidden": true
+      },
+      {
+        "name": "TestFeature4",
+        "description": "Test feature 4",
+        "version": "0.11",
+        "constraint": "importedDeserializer('aw')"
+      }
+    ],
+    "constraintDeserializers": [
+        "files/exampleConstraintDeserializer.js"
+    ]
+}

@@ -1,5 +1,5 @@
 import {z} from "zod";
-import FlaggerFeatureDeclaration from "../FlaggerFeatureDeclaration";
+import FlaggerFeatureDeclaration from "../feature/FlaggerFeatureDeclaration";
 
 const FlaggerExternalFeatureDeclaration = FlaggerFeatureDeclaration.extend({
     activators: z.array(z.string()).optional(),

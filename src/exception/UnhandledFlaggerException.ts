@@ -5,7 +5,7 @@ export default class UnhandledFlaggerException extends Error {
             new Error(String(unhandledException));
 
         super(
-            'Unhandled flagger exception occurred, message: ' + previousError.message + ' , check cause for more details',
+            `Unhandled flagger exception occurred, message of type ${previousError.name}: ${previousError.message}, check cause for more details`,
             { cause: previousError }
         );
     }

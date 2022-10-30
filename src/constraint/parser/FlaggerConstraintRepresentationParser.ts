@@ -1,6 +1,8 @@
 import AdditionalCharactersAfterClosingBracket from "./exception/AdditionalCharactersAfterClosingBracket";
 import NonAlphanumericCharacterInConstraintName from "./exception/NonAlphanumericCharacterInConstraintName";
 
+type ArgumentsTuple = [string, ...string[]] | [];
+
 export interface FlaggerConstraintParsedRepresentation {
     readonly name: string;
     readonly args: string[];

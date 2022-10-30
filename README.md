@@ -25,6 +25,21 @@ const featureManager = new FlaggerFeaturesManager(featureManagerConfig);
 await featureManager.loadFeatures(); // Load features and check constraint.
 ```
 
+## Feature definition
+
+```js
+const featureDefinition = {
+    name: '', // min 4 letters and max 25 letters
+    default: false, // boolean, optional - means, that feature can be active for initial state
+    version: string, // min 1 and max 10 letters
+    hidden: false, // boolean, optional
+    description: '', // string, min 5 letters and max 250 letters
+    tags: undefined, // Array<string>, optional
+    activators: [], // FlaggerActivator, optional
+    constraint: undefined // FlaggerConstraint, optional
+};
+```
+
 ## Load configuration
 
 ```js
@@ -38,22 +53,7 @@ featureManager.loadConfig(featureManagerConfig);
 // Via method - external, imported as object config
 // In this case constraint should be a string
 const featureManager = new FlaggerFeaturesManager();
-featureManager.loadExternalConfig(featureManagerConfig);
-```
-
-## Feature definition
-
-```js
-const featureDefinition = {
-    name: '', // min 4 letters and max 25 letters
-    default: false, // boolean, optional
-    version: string, // min 1 and max 10 letters
-    hidden: false, // boolean, optional
-    description: '', // string, min 5 letters and max 250 letters
-    tags: undefined, // Array<string>, optional
-    activators: [], // FlaggerActivator, optional
-    constraint: undefined // FlaggerConstraint, optional
-};
+await featureManager.loadExternalConfig(featureManagerConfig);
 ```
 
 ## Constraints
@@ -83,7 +83,10 @@ Example in json:
           "description": "Some existing feature",
           "constraint": "betweenDate('2022-09-01', '2022-10-14') and isOnline"
        }
-   ]
+   ],
+  "constraintDeserializers": [
+      
+  ]
 }
 ```
 
@@ -92,4 +95,40 @@ Example in js (custom constraint):
 const flaggerCustomConstraint = new FlaggerCustomConstraint({
     checker: async () => window.navigator.language.startsWith('en')
 });
+```
+
+## Constraint Deserializers (External config)
+
+### Custom Deserializers
+
+**externalConfig.json**:
+```json
+{
+  "features": [
+    {
+      "name": "SomeFeature",
+      "version": "0.0.2",
+      "description": "Real feature :)",
+      "constraint": "representativeName('sm')"
+    }
+  ],
+  "constraintDeserializers": [
+    "pathToExternalSerializerScript.js"
+  ]
+}
+```
+
+**pathToExternalSerializerScript.js**:
+```js
+import FlaggerCustomConstraint from 'features-flagger';
+
+export default {
+    representativeName: 'representativeName',
+
+    deserialize(sm) {
+        return new FlaggerCustomConstraint({
+            checker: async () => sm === 'sw'
+        });
+    }  
+};
 ```

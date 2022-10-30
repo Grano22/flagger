@@ -4,14 +4,17 @@
   "description": "Flagger is a library designed for check and manage feature flags in js ecosystem",
   "license": "Apache-2.0",
   "repository": "Grano22/flagger",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "keywords": [
     "feature",
     "flags",
     "feature_flags"
   ],
-  "files": ["src", "dist"],
+  "files": [
+    "src",
+    "dist"
+  ],
   "main": "./src/FlaggerFeaturesManager.ts",
   "module": "./src/FlaggerFeaturesManager.ts",
   "exports": {
@@ -28,9 +31,11 @@
     "test": "NODE_ENV=test jest"
   },
   "dependencies": {
+    "@types/node": "*",
     "cookie-store": "4.0.0-next.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "rxjs": "^7.5.7",
     "zod": "^3.19.1"
   },
   "devDependencies": {

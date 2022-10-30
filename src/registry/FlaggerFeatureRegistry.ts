@@ -1,22 +1,22 @@
-import FlaggerFeature from "../FlaggerFeature";
-import FlaggerFeatureDetails from "../FlaggerFeatureDetails";
+import FlaggerFeature from "../feature/FlaggerFeature";
+import FlaggerFeatureDetails from "../feature/FlaggerFeatureDetails";
 
-export default class FlaggerRegistry {
+export default class FlaggerFeatureRegistry {
     #flags: Map<string, FlaggerFeature>;
 
     constructor() {
         this.#flags = new Map<string, FlaggerFeature>();
     }
 
-    register(feature: FlaggerFeature) {
+    public register(feature: FlaggerFeature) {
         if (this.#flags.has(feature.name)) {
-            throw new Error(`Feature ${feature.name} already registered`);
+            throw new Error(`Feature ${feature.name} is already registered`);
         }
 
         this.#flags.set(feature.name, feature);
     }
 
-    getByName(featureName: string): FlaggerFeature | null {
+    public getByName(featureName: string): FlaggerFeature | null {
         return this.#flags.get(featureName) || null;
     }
 

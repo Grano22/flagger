@@ -1,32 +1,73 @@
-import {FlaggerExternalManagerConfig} from "./FlaggerExternalConfig";
+import FlaggerExternalConfig, {FlaggerExternalManagerConfig} from "./FlaggerExternalConfig";
 import {FlaggerManagerConfig} from "../config/FlaggerConfig";
 import {FlaggerExternalFeatureDeclarationType} from "./FlaggerExternalFeatureDeclaration";
-import {FlaggerFeatureDeclarationType} from "../FlaggerFeatureDeclaration";
+import {FlaggerFeatureDeclarationType} from "../feature/FlaggerFeatureDeclaration";
 import FlaggerChainConstraint, {ChainLogicOperator} from "../constraint/FlaggerChainConstraint";
 import FlaggerConstraintRepresentationParser from "../constraint/parser/FlaggerConstraintRepresentationParser";
-import FlaggerDeserializableConstraint from "../constraint/FlaggerDeserializableConstraint";
+import FlaggerConstraintDeserializer, {
+    FlaggerConstraintDeserializerMap
+} from "../constraint/deserializer/FlaggerConstraintDeserializer";
 import FlaggerConstraintType from "../constraint/FlaggerConstraintType";
 import CannotResolveConstraintDeserializableType from "../exception/CannotResolveConstraintDeserializableType";
+import FlaggerExternalModuleLoader from "./FlaggerExternalModuleLoader";
+import ExternalModuleIsNotAValidConstraintDeserializer
+    from "./deserializers/exception/ExternalModuleIsNotAValidConstraintDeserializer";
+import FSPathResolver from "../resolver/FSPathResolver";
 
+/**
+ * @todo Refactor to ChainFLoggerExternalConfigDeserializer in future
+ */
 export default class FlaggerExternalConfigDeserializer {
-    readonly #supportedConstraints: FlaggerDeserializableConstraint[];
+    readonly #supportedConstraintDeserializers: FlaggerConstraintDeserializer[];
 
-    constructor(supportedConstraints: FlaggerDeserializableConstraint[] = []) {
-        this.#supportedConstraints = supportedConstraints;
+    constructor(supportedConstraints: FlaggerConstraintDeserializer[] = []) {
+        this.#supportedConstraintDeserializers = supportedConstraints;
     }
 
-    public deserialize(externalConfig: FlaggerExternalManagerConfig): FlaggerManagerConfig {
+    public async deserialize(externalConfig: FlaggerExternalManagerConfig): Promise<FlaggerManagerConfig> {
         const internalConfig: FlaggerManagerConfig =
-            Object.assign({ ...externalConfig }, { features:[] });
+            Object.assign(
+                { ...externalConfig },
+                {
+                    features: [],
+                    constraintDeserializers: await this.#deserializeConstraintDeclaredDeserializers(
+                        externalConfig.constraintDeserializers
+                    )
+                }
+            );
 
         for (const featureInd in externalConfig.features) {
             internalConfig.features[featureInd] = Object.assign(externalConfig.features[featureInd], {
                 constraint: this.deserializeConstraint(externalConfig.features[featureInd].constraint),
-                activators: []
+                activators: [],
             });
         }
 
         return internalConfig;
+    }
+
+    async #deserializeConstraintDeclaredDeserializers(
+        externalDeclaredConstraintDeserializers: FlaggerExternalManagerConfig['constraintDeserializers']
+    ): Promise<FlaggerManagerConfig['constraintDeserializers']> {
+        if (!externalDeclaredConstraintDeserializers) {
+            return [];
+        }
+
+        const deserializers: FlaggerManagerConfig['constraintDeserializers'] = [];
+
+        for (const externalDeclaredConstraintDeserializer of externalDeclaredConstraintDeserializers) {
+            const externalModuleLoader = new FlaggerExternalModuleLoader(),
+                externalModule = await externalModuleLoader.loadJSModule(externalDeclaredConstraintDeserializer);
+
+            if (!FlaggerConstraintDeserializerMap.safeParse(externalModule).success) {
+                throw new ExternalModuleIsNotAValidConstraintDeserializer(externalDeclaredConstraintDeserializer);
+            }
+
+            this.#supportedConstraintDeserializers.push(externalModule as FlaggerConstraintDeserializer);
+            deserializers.push(externalModule as FlaggerConstraintDeserializer);
+        }
+
+        return deserializers;
     }
 
     private deserializeConstraint(
@@ -75,9 +116,13 @@ export default class FlaggerExternalConfigDeserializer {
 
         let constraint: FlaggerConstraintType | null = null;
 
-        for (const supportedConstraint of this.#supportedConstraints) {
+        console.log(this.#supportedConstraintDeserializers);
+        console.log(name);
+
+        for (const supportedConstraint of this.#supportedConstraintDeserializers) {
             if (supportedConstraint.representativeName === name) {
-                constraint = supportedConstraint.deserialize(...args);
+                const [ firstArg, ...nextArgs ] = args;
+                constraint = supportedConstraint.deserialize(firstArg, ...nextArgs) as FlaggerConstraintType;
             }
         }
 
@@ -85,7 +130,7 @@ export default class FlaggerExternalConfigDeserializer {
     }
 
     #tokenizeConstraintStringForm(constraintConfig: string): [ string, [ string, string ][] ] {
-        const [ firstConstraint, ...parts ] = constraintConfig.split(/(and|or)/g)
+        const [ firstConstraint, ...parts ] = constraintConfig.split(/\s(and|or)\s/g)
             .map(delimiter => delimiter.trimEnd().trimStart());
 
         const partPairs: [string, string][] = [];

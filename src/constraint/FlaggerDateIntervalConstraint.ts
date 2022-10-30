@@ -17,8 +17,6 @@ export default class FlaggerDateIntervalConstraint
     implements FlaggerConstraintInterface,
     FlaggerSerializableConstraint
 {
-    static readonly representativeName = 'betweenDate';
-
     constructor(config: z.infer<typeof FlaggerDateIntervalConstraintConfig>) {
         super(config, FlaggerDateIntervalConstraintConfig);
     }
@@ -27,23 +25,6 @@ export default class FlaggerDateIntervalConstraint
         const currDate = new Date();
 
         return currDate > this.config.startDate && currDate < this.config.endDate;
-    }
-
-    static deserialize(...args: any[]): FlaggerDateIntervalConstraint {
-        let startDate = Date.parse(args[0]), endDate = Date.parse(args[1]);
-
-        if (isNaN(startDate)) {
-            throw new InvalidDateFormatInString(args[0]);
-        }
-
-        if (isNaN(endDate)) {
-            throw new InvalidDateFormatInString(args[1]);
-        }
-
-        return new this({
-            startDate: new Date(startDate),
-            endDate: new Date(endDate)
-        });
     }
 
     serialize() {

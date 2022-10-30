@@ -6,17 +6,11 @@ export default class FlaggerOnlineConstraint
     implements FlaggerConstraintInterface,
     FlaggerSerializableConstraint
 {
-    static readonly representativeName = 'isOnline';
-
     async canBeActivated(): Promise<boolean> {
         return navigator.onLine;
     }
 
     serialize(): any[] {
         return [];
-    }
-
-    static deserialize(): FlaggerOnlineConstraint {
-        return new this();
     }
 }
