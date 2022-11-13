@@ -9,6 +9,8 @@ const path = require('path');
 import {FlaggerManagerConfig} from "../../src/config/FlaggerConfig";
 import FlaggerConstraintDeserializer from "../../src/constraint/deserializer/FlaggerConstraintDeserializer";
 import FlaggerCustomConstraint from "../../src/constraint/FlaggerCustomConstraint";
+import FlaggerWhenOnlineConstraint from "../../src/constraint/realtime/FlaggerWhenOnlineConstraint";
+import FlaggerRealtimeConstraintCollection from "../../src/collection/FlaggerRealtimeConstraintCollection";
 
 //const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -92,6 +94,14 @@ describe('Flagger features manager test', () => {
                     description: 'Test feature 3',
                     version: '0.4',
                     hidden: true
+                },
+                {
+                    name: 'TestFeature4',
+                    description: 'Test feature with realtime constraint',
+                    version: '0.128',
+                    realtimeConstraint: new FlaggerRealtimeConstraintCollection([
+                        new FlaggerWhenOnlineConstraint()
+                    ])
                 }
             ],
             constraintDeserializers: [
@@ -107,6 +117,7 @@ describe('Flagger features manager test', () => {
         expect(featureManager.isActive('TestFeature1')).toBeTruthy();
         expect(featureManager.isActive('TestFeature2')).toBeTruthy();
         expect(featureManager.isActive('TestFeature3')).toBeFalsy();
+        expect(featureManager.isActive('TestFeature4')).toBeTruthy();
     });
 
     it('Managers works as expected with external config', async () => {
@@ -131,5 +142,6 @@ describe('Flagger features manager test', () => {
         expect(featureManager.isActive('TestFeature2')).toBeTruthy();
         expect(featureManager.isActive('TestFeature3')).toBeFalsy();
         expect(featureManager.isActive('TestFeature4')).toBeTruthy();
+        expect(featureManager.isActive('TestFeature5')).toBeTruthy();
     });
 });

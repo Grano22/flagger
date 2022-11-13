@@ -1,7 +1,8 @@
 import FlaggerConstraintDeserializer from "./FlaggerConstraintDeserializer";
 import FlaggerConstraintType from "../FlaggerConstraintType";
+import FlaggerRealtimeConstraint from "../realtime/FlaggerRealtimeConstraint";
 
-export default class FlaggerConstraintGenericDeserializer<FlaggerConstraintDeserializerType extends FlaggerConstraintType> implements FlaggerConstraintDeserializer {
+export default class FlaggerConstraintGenericDeserializer<FlaggerConstraintDeserializerType extends FlaggerConstraintType | FlaggerRealtimeConstraint> implements FlaggerConstraintDeserializer {
     readonly representativeName: string;
     #targetConstraintClass: new (...args: any[]) => FlaggerConstraintDeserializerType;
 
@@ -10,7 +11,7 @@ export default class FlaggerConstraintGenericDeserializer<FlaggerConstraintDeser
         this.#targetConstraintClass = representativeClass;
     }
 
-    deserialize(): FlaggerConstraintDeserializerType {
+    public deserialize(): FlaggerConstraintDeserializerType {
         return new this.#targetConstraintClass();
     }
 }

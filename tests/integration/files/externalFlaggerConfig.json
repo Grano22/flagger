@@ -24,6 +24,14 @@
         "description": "Test feature 4",
         "version": "0.11",
         "constraint": "importedDeserializer('aw')"
+      },
+      {
+        "name": "TestFeature5",
+        "description": "Test feature 5 with realtime constraint",
+        "version": "0.14",
+        "realtimeConstraint": [
+            "whenOnline"
+        ]
       }
     ],
     "constraintDeserializers": [

@@ -1,6 +1,7 @@
 import StorageInRegistryIsNotReadable from "./exception/StorageInRegistryIsNotReadable";
 import StorageInRegistryIsNotShrinkable from "./exception/StorageInRegistryIsNotShrinkable";
 import StorageInRegistryIsNotIterable from "./exception/StorageInRegistryIsNotIterable";
+import StorageInRegistryIsNotExtensible from "./exception/StorageInRegistryIsNotExtensible";
 
 interface RegistryConfig {
     readonly isReadable?: boolean;
@@ -65,5 +66,14 @@ export default abstract class Registry<RValue, RKey extends string | number | sy
         }
 
         return this.#registryStorage.entries();
+    }
+
+    protected setValue(name: RKey, value: RValue): void
+    {
+        if (!this.#registryConfig.isExtensible) {
+            throw new StorageInRegistryIsNotExtensible();
+        }
+
+        this.#registryStorage.set(name, value);
     }
 }

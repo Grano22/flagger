@@ -16,6 +16,7 @@ specifiers:
   ts-node: ^10.9.1
   typescript: ^4.6.4
   vite: ^3.1.0
+  watch-object: ^1.1.2
   zod: ^3.19.1
 
 dependencies:
@@ -24,6 +25,7 @@ dependencies:
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
   rxjs: 7.5.7
+  watch-object: 1.1.2
   zod: 3.19.1
 
 devDependencies:
@@ -3112,6 +3114,10 @@ packages:
     dependencies:
       makeerror: 1.0.12
     dev: true
+
+  /watch-object/1.1.2:
+    resolution: {integrity: sha512-tR5ttGUQ93XsGbzQs82fiPGrX7QztGv3wEEJ+Hfwlg0EZPQWgLel/sTG40x5O7C37F7DOo0pvcvg7slgGSJIfw==}
+    dev: false
 
   /webidl-conversions/7.0.0:
     resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
