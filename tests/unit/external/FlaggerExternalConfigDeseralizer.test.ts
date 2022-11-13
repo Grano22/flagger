@@ -1,11 +1,13 @@
 import FlaggerExternalConfigDeserializer from "../../../src/external/FlaggerExternalConfigDeserializer";
-import FlaggerChainConstraint from "../../../src/constraint/FlaggerChainConstraint";
+import FlaggerChainConstraint from "../../../src/constraint/chain/FlaggerChainConstraint";
 import FlaggerDateIntervalConstraint from "../../../src/constraint/FlaggerDateIntervalConstraint";
 import FlaggerOnlineConstraint from "../../../src/constraint/FlaggerOnlineConstraint";
 import FlaggerConstraintGenericDeserializer
     from "../../../src/constraint/deserializer/FlaggerConstraintGenericDeserializer";
 import FlaggerDateIntervalConstraintDeserializer
     from "../../../src/constraint/deserializer/FlaggerDateIntervalConstraintDeserializer";
+import FlaggerRealtimeConstraintCollection from "../../../src/collection/FlaggerRealtimeConstraintCollection";
+import FlaggerWhenOnlineConstraint from "../../../src/constraint/realtime/FlaggerWhenOnlineConstraint";
 
 describe('External serializer should process config in correct way', () => {
     it('When config is valid', async () => {
@@ -14,7 +16,8 @@ describe('External serializer should process config in correct way', () => {
             externalConfigObj = await import('./files/flaggerConfig.json'),
             deserializer = new FlaggerExternalConfigDeserializer([
                 new FlaggerDateIntervalConstraintDeserializer(),
-                new FlaggerConstraintGenericDeserializer('isOnline', FlaggerOnlineConstraint)
+                new FlaggerConstraintGenericDeserializer('isOnline', FlaggerOnlineConstraint),
+                new FlaggerConstraintGenericDeserializer('whenOnline', FlaggerWhenOnlineConstraint)
             ]),
             expectedInternalConfig = {
                 features: [
@@ -29,7 +32,19 @@ describe('External serializer should process config in correct way', () => {
                                 endDate: new Date(2022, 10, 14)
                             })
                         ).and(new FlaggerOnlineConstraint()),
+                        realtimeConstraint: new FlaggerRealtimeConstraintCollection([]),
                         activators:[]
+                    },
+                    {
+                        name: "SomeRealtimeFeature",
+                        version: "0.2",
+                        description: "Some realtime existing feature",
+                        constraint: undefined,
+                        /* "whenOnline()" */
+                        realtimeConstraint: new FlaggerRealtimeConstraintCollection([
+                            new FlaggerWhenOnlineConstraint()
+                        ]),
+                        activators: []
                     }
                 ],
                 constraintDeserializers: []

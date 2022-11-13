@@ -4,7 +4,7 @@
   "description": "Flagger is a library designed for check and manage feature flags in js ecosystem",
   "license": "Apache-2.0",
   "repository": "Grano22/flagger",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "type": "module",
   "keywords": [
     "feature",
@@ -36,6 +36,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rxjs": "^7.5.7",
+    "watch-object": "^1.1.2",
     "zod": "^3.19.1"
   },
   "devDependencies": {

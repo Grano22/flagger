@@ -22,9 +22,13 @@ import FlaggerConstraintGenericDeserializer from "./constraint/deserializer/Flag
 import FlaggerConstraintDeserializer from "./constraint/deserializer/FlaggerConstraintDeserializer";
 import FlaggerDateIntervalConstraintDeserializer
     from "./constraint/deserializer/FlaggerDateIntervalConstraintDeserializer";
+import FlaggerRealtimeConstraintRegistry from "./registry/FlaggerRealtimeConstraintRegistry";
+import FlaggerSupportsConstraintDeserializer from "./constraint/deserializer/FlaggerSupportsConstraintDeserializer";
+import FlaggerWhenOnlineConstraint from "./constraint/realtime/FlaggerWhenOnlineConstraint";
 
 export default class FlaggerFeaturesManager {
     readonly #featureRegistry: FlaggerFeatureRegistry;
+    readonly #realtimeConstraintRegistry: FlaggerRealtimeConstraintRegistry;
     readonly #configLoader: FlaggerConfigLoader;
     readonly #serviceLocator: FlaggerServiceLocator;
     readonly #addons: FlaggerAddonRegistry;
@@ -52,6 +56,7 @@ export default class FlaggerFeaturesManager {
 
     constructor(config: FlaggerManagerConfig | null = null) {
         this.#featureRegistry = new FlaggerFeatureRegistry();
+        this.#realtimeConstraintRegistry = new FlaggerRealtimeConstraintRegistry();
         this.#configLoader = new FlaggerConfigLoader();
         this.#serviceLocator = new FlaggerServiceLocator();
         this.#addons = new FlaggerAddonRegistry();
@@ -85,20 +90,24 @@ export default class FlaggerFeaturesManager {
                     declaredFeatureMap.name,
                     declaredFeatureMap.description,
                     declaredFeatureMap.version,
-                    !!declaredFeatureMap.hidden
+                    !!declaredFeatureMap.hidden,
+                    !!declaredFeatureMap.changeable
                 );
 
                 if (!!declaredFeature.default) {
                     feature.activate();
-                } else {
-                    if (declaredFeature.constraint) {
-                        if (await declaredFeature.constraint.checkIfShouldBeActivated()) {
-                            feature.activate();
-                        }
+                } else if (declaredFeature.constraint) {
+                    if (await declaredFeature.constraint.checkIfShouldBeActivated()) {
+                        feature.activate();
                     }
                 }
 
                 this.#featureRegistry.register(feature);
+
+                for (const realtimeConstraint of declaredFeature.realtimeConstraint || []) {
+                    this.#realtimeConstraintRegistry.addConstraint(feature, realtimeConstraint);
+                    await realtimeConstraint.start(feature);
+                }
             }
 
             this.#configLoader.markConfigPartAsLoaded('features');
@@ -141,7 +150,9 @@ export default class FlaggerFeaturesManager {
     #prepareConstraintDeserializers() {
         const builtIn: FlaggerConstraintDeserializer[] = [
             new FlaggerConstraintGenericDeserializer('isOnline', FlaggerOnlineConstraint),
-            new FlaggerDateIntervalConstraintDeserializer()
+            new FlaggerDateIntervalConstraintDeserializer(),
+            new FlaggerSupportsConstraintDeserializer(),
+            new FlaggerConstraintGenericDeserializer('whenOnline', FlaggerWhenOnlineConstraint)
         ];
 
         for (const constraintDeserializer of this.#configLoader.map?.constraintDeserializers ?? []) {

@@ -3,6 +3,7 @@ import CannotLoadExternalModule from "./deserializers/exception/CannotLoadExtern
 import FSPathResolver from "../resolver/FSPathResolver";
 import * as process from "process";
 
+/** @internal */
 export default class FlaggerExternalModuleLoader<ModuleType> {
     #loadedModule: null | ModuleType = null;
     readonly #pathResolver: FSPathResolver;

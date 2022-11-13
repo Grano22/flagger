@@ -1,24 +1,34 @@
 import FlaggerFeatureStatus from "../FlaggerFeatureStatus";
 import FlaggerFeatureDetails from "./FlaggerFeatureDetails";
+import FeatureActivityPersistence from "../persistence/FeatureActivityPersistence";
 
+/** @internal */
 export default class FlaggerFeature {
     #state: FlaggerFeatureStatus;
-    #hidden: boolean;
-    #activatedAt: Date | null;
+    readonly #hidden: boolean;
+    readonly #changeable: boolean;
+    #activitySnapshots: FeatureActivityPersistence;
 
     constructor(
         public readonly name: string,
         public readonly description: string,
         public readonly version: string,
-        hidden: boolean
+        hidden: boolean,
+        changeable: boolean
     ) {
         this.#state = FlaggerFeatureStatus.INACTIVE;
         this.#hidden = hidden;
-        this.#activatedAt = null;
+        this.#changeable = changeable;
+        this.#activitySnapshots = new FeatureActivityPersistence();
     }
 
     get status() {
         return this.#state;
+    }
+
+    get isChangeable(): boolean
+    {
+        return this.#changeable;
     }
 
     get isHidden(): boolean
@@ -27,12 +37,32 @@ export default class FlaggerFeature {
     }
 
     public activate() {
-        if (this.#state === FlaggerFeatureStatus.ACTIVATED) {
+        if (
+            this.#state !== FlaggerFeatureStatus.INACTIVE &&
+            this.#state !== FlaggerFeatureStatus.DEACTIVATED
+        ) {
             throw new Error(`Feature status cannot be changed`);
         }
 
+        this.#activitySnapshots.persistSnapshot({
+            occurredAt: new Date(),
+            previousState: this.#state,
+            nextState: FlaggerFeatureStatus.ACTIVATED
+        });
         this.#state = FlaggerFeatureStatus.ACTIVATED;
-        this.#activatedAt = new Date();
+    }
+
+    public deactivate() {
+        if (!this.#changeable) {
+            throw new Error('Feature is not changeable so it cannot be deactivated');
+        }
+
+        this.#activitySnapshots.persistSnapshot({
+            occurredAt: new Date(),
+            previousState: this.#state,
+            nextState: FlaggerFeatureStatus.DEACTIVATED
+        });
+        this.#state = FlaggerFeatureStatus.DEACTIVATED;
     }
 
     public getDetails(): FlaggerFeatureDetails {

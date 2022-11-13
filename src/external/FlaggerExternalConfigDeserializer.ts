@@ -2,7 +2,7 @@ import FlaggerExternalConfig, {FlaggerExternalManagerConfig} from "./FlaggerExte
 import {FlaggerManagerConfig} from "../config/FlaggerConfig";
 import {FlaggerExternalFeatureDeclarationType} from "./FlaggerExternalFeatureDeclaration";
 import {FlaggerFeatureDeclarationType} from "../feature/FlaggerFeatureDeclaration";
-import FlaggerChainConstraint, {ChainLogicOperator} from "../constraint/FlaggerChainConstraint";
+import FlaggerChainConstraint from "../constraint/chain/FlaggerChainConstraint";
 import FlaggerConstraintRepresentationParser from "../constraint/parser/FlaggerConstraintRepresentationParser";
 import FlaggerConstraintDeserializer, {
     FlaggerConstraintDeserializerMap
@@ -13,9 +13,14 @@ import FlaggerExternalModuleLoader from "./FlaggerExternalModuleLoader";
 import ExternalModuleIsNotAValidConstraintDeserializer
     from "./deserializers/exception/ExternalModuleIsNotAValidConstraintDeserializer";
 import FSPathResolver from "../resolver/FSPathResolver";
+import FlaggerRealtimeConstraintCollection from "../collection/FlaggerRealtimeConstraintCollection";
+import {ChainLogicOperator} from "../constraint/chain/FlaggerLogicalChain";
+import FlaggerRealtimeConstraint from "../constraint/realtime/FlaggerRealtimeConstraint";
+import FlaggerConstraint from "../constraint/FlaggerConstraint";
 
 /**
  * @todo Refactor to ChainFLoggerExternalConfigDeserializer in future
+ * @internal
  */
 export default class FlaggerExternalConfigDeserializer {
     readonly #supportedConstraintDeserializers: FlaggerConstraintDeserializer[];
@@ -38,7 +43,14 @@ export default class FlaggerExternalConfigDeserializer {
 
         for (const featureInd in externalConfig.features) {
             internalConfig.features[featureInd] = Object.assign(externalConfig.features[featureInd], {
-                constraint: this.deserializeConstraint(externalConfig.features[featureInd].constraint),
+                constraint: this.#deserializeConstraintChain(externalConfig.features[featureInd].constraint),
+                realtimeConstraint: new FlaggerRealtimeConstraintCollection(
+                    (externalConfig.features[featureInd].realtimeConstraint ?? [])
+                        .map(
+                            (realtimeConstraintRepresentation: string) =>
+                                this.#deserializeRealtimeConstraint(realtimeConstraintRepresentation)
+                        )
+                ),
                 activators: [],
             });
         }
@@ -70,7 +82,7 @@ export default class FlaggerExternalConfigDeserializer {
         return deserializers;
     }
 
-    private deserializeConstraint(
+    #deserializeConstraintChain(
         externalConstraintConfig: FlaggerExternalFeatureDeclarationType['constraint']
     ): FlaggerFeatureDeclarationType['constraint'] {
         if (typeof externalConstraintConfig !== 'string') {
@@ -82,19 +94,11 @@ export default class FlaggerExternalConfigDeserializer {
         const [ initialConstraintRepresentation, nextConstraintsRepresentations ] =
             this.#tokenizeConstraintStringForm(externalConstraintConfig);
 
-        const initialConstraint = this.#resolveConstraintType(initialConstraintRepresentation);
-
-        if (!initialConstraint) {
-            throw new CannotResolveConstraintDeserializableType(initialConstraintRepresentation);
-        }
+        const initialConstraint = this.#deserializeConstraint(initialConstraintRepresentation);
 
         constraintChain = new FlaggerChainConstraint(initialConstraint);
         for (const [ nextConstraintOperator, nextConstraintDef ] of nextConstraintsRepresentations) {
-            const nextConstraint = this.#resolveConstraintType(nextConstraintDef);
-
-            if (!nextConstraint) {
-                throw new CannotResolveConstraintDeserializableType(nextConstraintDef);
-            }
+            const nextConstraint = this.#deserializeConstraint(nextConstraintDef);
 
             switch (nextConstraintOperator.toUpperCase()) {
                 case ChainLogicOperator.AND:
@@ -109,20 +113,47 @@ export default class FlaggerExternalConfigDeserializer {
         return constraintChain;
     }
 
-    #resolveConstraintType(constraintRepresentation: string): FlaggerConstraintType | null {
+    #deserializeRealtimeConstraint(constraintRepresentation: string): FlaggerRealtimeConstraint
+    {
+        const resolvedConstraint = this.#resolveConstraintType(constraintRepresentation);
+
+        if (!resolvedConstraint) {
+            throw new CannotResolveConstraintDeserializableType(constraintRepresentation);
+        }
+
+        if (!(resolvedConstraint instanceof FlaggerRealtimeConstraint)) {
+            throw new Error(`Resolved constraint ${resolvedConstraint.constructor.name} is not a realtime constraint`);
+        }
+
+        return resolvedConstraint;
+    }
+
+    #deserializeConstraint(constraintRepresentation: string): FlaggerConstraintType
+    {
+        const resolvedConstraint = this.#resolveConstraintType(constraintRepresentation);
+
+        if (!resolvedConstraint) {
+            throw new CannotResolveConstraintDeserializableType(constraintRepresentation);
+        }
+
+        if (!(resolvedConstraint instanceof FlaggerConstraint)) {
+            throw new Error(`Resolved constraint ${resolvedConstraint.constructor.name} is not a static constraint`);
+        }
+
+        return resolvedConstraint as FlaggerConstraintType;
+    }
+
+    #resolveConstraintType(constraintRepresentation: string): FlaggerRealtimeConstraint | FlaggerConstraint<unknown> | null {
         const
             parser = new FlaggerConstraintRepresentationParser(),
             { name, args } = parser.parse(constraintRepresentation);
 
-        let constraint: FlaggerConstraintType | null = null;
-
-        console.log(this.#supportedConstraintDeserializers);
-        console.log(name);
+        let constraint: FlaggerConstraint<unknown> | FlaggerRealtimeConstraint | null = null;
 
         for (const supportedConstraint of this.#supportedConstraintDeserializers) {
             if (supportedConstraint.representativeName === name) {
                 const [ firstArg, ...nextArgs ] = args;
-                constraint = supportedConstraint.deserialize(firstArg, ...nextArgs) as FlaggerConstraintType;
+                constraint = supportedConstraint.deserialize(firstArg, ...nextArgs);
             }
         }
 

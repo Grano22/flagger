@@ -1,4 +1,4 @@
-# TODOIST
+# TODO LIST :)
 
 ## Priority table
 
@@ -6,8 +6,13 @@
 * [X] Create basic addon mechanism.
 * [X] Create support for config files.
 * [X] Add supported constraint deserializers as predefined.
+* [X] Changeable features.
+* [X] Realtime constraints.
 * [ ] Create more constraints.
 * [ ] Activation events
 * [ ] React implementation
 * [ ] Contextual features
-* [ ] Store serialized contraints in config?
+* [ ] Features groups
+* [ ] Store serialized constraints in config?
+* [ ] Admin panel to manage feature management.
+

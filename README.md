@@ -97,6 +97,27 @@ const flaggerCustomConstraint = new FlaggerCustomConstraint({
 });
 ```
 
+### List constraints to use
+* **FlaggerSupportsConstraint** - Use feature when browser supports some features.
+* **FlaggerOnlineConstraint** - Use feature when user is online.
+* **FlaggerDateIntervalConstraint** - Use feature between date ranges.
+
+## Realtime Constraints
+
+**Realtime constraint** can be used to make feature disposable according to some requirements.
+It can be usefully especially when your feature must be available only for some conditions.
+
+```json
+{
+    "name": "OnlineFeature",
+    "description": "Feature will be available when user is online",
+    "version": "0.14",
+    "realtimeConstraint": [
+        "whenOnline"
+    ]
+}
+```
+
 ## Constraint Deserializers (External config)
 
 ### Custom Deserializers

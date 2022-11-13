@@ -1,4 +1,4 @@
-import FlaggerChainConstraint from "../../../src/constraint/FlaggerChainConstraint";
+import FlaggerChainConstraint from "../../../src/constraint/chain/FlaggerChainConstraint";
 import FlaggerOnlineConstraint from "../../../src/constraint/FlaggerOnlineConstraint";
 import FlaggerDateIntervalConstraint from "../../../src/constraint/FlaggerDateIntervalConstraint";
 

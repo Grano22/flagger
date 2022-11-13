@@ -1,0 +1,46 @@
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - 'rv[0-9]{4}[0-9]{2}[0-9]{2}\-[0-9]{2}[0-9]{2}'
+
+name: Create Release
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 7
+      - name: Build release dist
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+      - name: Zip Dist Code to release
+        run: zip -r "release-${{ github.ref_name }}.zip" ./dist
+      - name: Create Release info
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_OWNER: grano22
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: ${{ github.event.head_commit.message }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release-${{ github.ref_name }}.zip
+          asset_name: release-${{ github.ref_name }}.zip
+          asset_content_type: application/zip

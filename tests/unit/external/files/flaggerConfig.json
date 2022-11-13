@@ -5,6 +5,14 @@
           "version": "0.0.1",
           "description": "Some existing feature",
           "constraint": "betweenDate('2022-09-01', '2022-10-14') and isOnline"
+       },
+       {
+          "name": "SomeRealtimeFeature",
+          "version": "0.2",
+          "description": "Some realtime existing feature",
+          "realtimeConstraint": [
+              "whenOnline()"
+          ]
        }
    ]
 }
